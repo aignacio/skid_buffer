@@ -1,16 +1,118 @@
 /**
  * File              : dut.sv
  * License           : MIT license <Check LICENSE>
- * Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
- * Date              : 04.11.2023
- * Last Modified Date: 04.11.2023
+ * Author            : Anderson Ignacio da Silva (aignacio) <anderson@aignacio.com>
+ * Date              : 02.06.2024
+ * Last Modified Date: 03.06.2024
+ * Description       : Skid Buffer to break combo path between pip flops
  */
-module dut #(
-  parameter WIDTH = 32
+module skid_buffer
+#(
+  parameter int DATA_WIDTH = 8,
+  parameter bit REG_OUTPUT = 1
 )(
-  input                     clk,
-  input                     arst,
-  output  logic [WIDTH-1:0] data
+  input                          clk,
+  input                          rst,
+  // Input I/F
+  input                          in_valid_i,
+  output  logic                  in_ready_o,
+  input   [DATA_WIDTH-1:0]       in_data_i,
+
+  // Output I/F
+  output  logic                  out_valid_o,
+  input                          out_ready_i,
+  output  logic [DATA_WIDTH-1:0] out_data_o
 );
-  assign data = 'hDEADBEEF;
+  typedef logic [(DATA_WIDTH-1):0] buffer_t;
+
+  logic     valid_ff, next_valid; // Only used in case REG_OUTPUT == 1
+  logic     ready_ff, next_ready; 
+  buffer_t  buff_ff, next_buff;
+  buffer_t  data_out_ff, next_data_out; // Only used in case REG_OUTPUT == 1
+
+  always_comb begin : ready_logic
+    in_ready_o = ready_ff;
+    next_ready = ready_ff;
+
+    if ((in_valid_i && in_ready_o) && (out_valid_o && ~out_ready_i)) begin
+      next_ready = 1'b0;
+    end
+    else if (out_ready_i) begin
+        next_ready = 1'b1;
+    end
+  end : ready_logic
+
+  always_comb begin : valid_data_logic
+    next_valid = valid_ff;
+    next_buff = buff_ff;
+    next_data_out = data_out_ff;
+
+    
+    if (REG_OUTPUT == 0) begin : reg_output_0
+      if (ready_ff == 1'b0) begin
+        out_valid_o = 1'b1;
+        out_data_o = buff_ff;
+      end
+      else begin
+        out_valid_o = in_valid_i;
+
+        if (in_valid_i) begin
+          next_buff = in_data_i;
+          out_data_o = in_data_i; 
+        end
+        else begin
+          out_data_o = '0;
+        end
+      end
+    end : reg_output_0
+    else begin : reg_output_1 
+      out_data_o = data_out_ff;
+      out_valid_o = valid_ff;
+
+      if (in_valid_i && valid_ff && in_ready_o) begin
+        next_buff = in_data_i;
+      end
+
+      if (~valid_ff) begin
+        next_valid = in_valid_i;
+        next_data_out = in_valid_i ? in_data_i : buffer_t'('0);
+      end
+      else begin
+        if (out_ready_i && ~in_valid_i && ready_ff) begin
+          // If slave is available + have no new req + nothing buff:
+          // valid == 0
+          // data_out == 0
+          next_data_out = buffer_t'('0);
+          next_valid = 1'b0;
+        end
+        else if (out_ready_i && ~ready_ff) begin
+          // If slave is available + data buff:
+          // valid == 1
+          // data_out == buff
+          next_data_out = buff_ff;
+        end
+        else if (out_ready_i && in_valid_i && ready_ff) begin
+          // If slave is available + have new req + nothing buff:
+          // valid == 1
+          // data_out == data_in
+          next_data_out = in_data_i;
+        end
+      end
+    end : reg_output_1
+  end : valid_data_logic
+
+  always_ff @ (posedge clk or posedge rst) begin
+    if (rst) begin
+      ready_ff    <= 1'b1;
+      valid_ff    <= 1'b0;
+      buff_ff     <= buffer_t'('0);
+      data_out_ff <= buffer_t'('0);
+    end
+    else begin
+      ready_ff    <= next_ready;
+      valid_ff    <= next_valid;
+      buff_ff     <= next_buff;
+      data_out_ff <= next_data_out;
+    end
+  end
 endmodule
