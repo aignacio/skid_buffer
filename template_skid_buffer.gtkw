@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
-[*] Sun Jun  2 21:01:12 2024
+[*] Mon Jun  3 00:03:12 2024
 [*]
 [dumpfile] "run_dir/sim_build_verilator_test_basic/dump.fst"
-[dumpfile_mtime] "Sun Jun  2 20:59:23 2024"
-[dumpfile_size] 1759
-[savefile] "/Users/aignacio/projects/skid_buffer_test/template_skid_buffer.gtkw"
-[timestart] 0
+[dumpfile_mtime] "Mon Jun  3 00:01:46 2024"
+[dumpfile_size] 1999
+[savefile] "template_skid_buffer.gtkw"
+[timestart] 1733400
 [size] 1440 900
 [pos] 0 28
-*-18.890194 224110 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+*-16.972382 -1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 [markername] AA
 [markername] BB
 [markername] CC
@@ -60,7 +60,9 @@ skid_buffer.out_valid_o
 skid_buffer.out_ready_i
 @200
 -
-@23
+@22
 skid_buffer.buff_ff[7:0]
+@23
+skid_buffer.data_out_ff[7:0]
 [pattern_trace] 1
 [pattern_trace] 0

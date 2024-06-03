@@ -69,7 +69,7 @@ module skid_buffer
       out_data_o = data_out_ff;
       out_valid_o = valid_ff;
 
-      if (in_valid_i && valid_ff && in_ready_o) begin
+      if ((in_valid_i && in_ready_o) && (out_valid_o && ~out_ready_i)) begin
         next_buff = in_data_i;
       end
 

@@ -4,7 +4,7 @@
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson Ignacio da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 12.07.2023
-# Last Modified Date: 02.06.2024
+# Last Modified Date: 03.06.2024
 import random
 import cocotb
 import os
@@ -62,14 +62,18 @@ async def run_test(dut):
 
     dut.in_valid_i.value = 1
     for i in range(100):
+        dut.out_ready_i.value = rnd_val(1, True) 
         if dut.in_ready_o.value != 0:
             dut.in_data_i.value = rnd_val(8, True) 
-        dut.out_ready_i.value = rnd_val(1, True) 
         await ClockCycles(dut.clk, 1) 
-    
+
+    while dut.in_ready_o.value == 0:
+        await ClockCycles(dut.clk, 1) 
+        dut.out_ready_i.value = rnd_val(1, True) 
+
     dut.in_valid_i.value = 0
     dut.in_data_i.value = 0
-    dut.out_ready_i.value = 0
+    dut.out_ready_i.value = 1
     await ClockCycles(dut.clk, 10)
 
 def test_basic():
