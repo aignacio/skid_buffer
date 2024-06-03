@@ -10,6 +10,7 @@ import cocotb
 import os
 import logging
 import pytest
+import copy
 
 from random import randrange
 from const.const import cfg
@@ -28,22 +29,45 @@ def rnd_val(bit: int = 0, zero: bool = True):
 
 async def setup_dut(dut, cycles):
     cocotb.start_soon(Clock(dut.clk, *cfg.CLK_100MHz).start())
+
+    # Master side
+    dut.in_valid_i.value = 0
+    dut.in_data_i.value = 0
+    
+    # Slave side
+    dut.out_ready_i.value = 0
+
     dut.rst.value = 1
     await ClockCycles(dut.clk, cycles)
     dut.rst.value = 0
 
+async def mon_if(dut, valid, ready, data):
+    """Monitor the interface to ensure data stability when valid is asserted."""
+    while True:
+        # Wait for the rising edge of the valid signal
+        await RisingEdge(valid)
+        
+        # Capture the data value at the time valid is asserted
+        initial_data = copy.deepcopy(data.value)
+        
+        # Monitor the data signal until ready is asserted
+        while ready.value == 0:
+            await ReadOnly()
+            if data.value != initial_data:
+                raise TestFailure(
+                    f"Data changed from {initial_data} to {data.value} while valid is asserted and ready is not high"
+                )
+            await RisingEdge(dut.clk)
+
 @cocotb.test()
 async def run_test(dut):
     await setup_dut(dut, cfg.RST_CYCLES)
-    # Master side
-    dut.in_valid_i.value = 0
-    dut.in_data_i.value = 0 #rnd_val(8, True) 
-    
-    # Slave side
-    dut.out_ready_i.value = 0
-    await ClockCycles(dut.clk, 10) 
 
-    ## Inicia aqui o test
+    await ClockCycles(dut.clk, 2) 
+    
+    cocotb.start_soon(mon_if(dut, dut.in_valid_i, dut.in_ready_o, dut.in_data_i))
+    cocotb.start_soon(mon_if(dut, dut.out_valid_o, dut.out_ready_i, dut.out_data_o))
+    # ## Inicia aqui o test
 
     # Master side
     dut.in_valid_i.value = 1
@@ -78,7 +102,7 @@ async def run_test(dut):
 
 def test_basic():
     """
-    Basic test to check the DUT
+    Check whether 
 
     Test ID: 1
     """

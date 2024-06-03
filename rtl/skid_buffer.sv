@@ -1,5 +1,5 @@
 /**
- * File              : dut.sv
+ * File              : skid_buffer.sv
  * License           : MIT license <Check LICENSE>
  * Author            : Anderson Ignacio da Silva (aignacio) <anderson@aignacio.com>
  * Date              : 02.06.2024
@@ -48,7 +48,7 @@ module skid_buffer
     next_data_out = data_out_ff;
 
     
-    if (REG_OUTPUT == 0) begin : reg_output_0
+    if (REG_OUTPUT == 0) begin : REG_OUTPUT_FALSE
       if (ready_ff == 1'b0) begin
         out_valid_o = 1'b1;
         out_data_o = buff_ff;
@@ -64,8 +64,8 @@ module skid_buffer
           out_data_o = '0;
         end
       end
-    end : reg_output_0
-    else begin : reg_output_1 
+    end : REG_OUTPUT_FALSE
+    else begin : REG_OUTPUT_TRUE 
       out_data_o = data_out_ff;
       out_valid_o = valid_ff;
 
@@ -98,7 +98,7 @@ module skid_buffer
           next_data_out = in_data_i;
         end
       end
-    end : reg_output_1
+    end : REG_OUTPUT_TRUE
   end : valid_data_logic
 
   always_ff @ (posedge clk or posedge rst) begin
