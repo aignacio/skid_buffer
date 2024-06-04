@@ -21,7 +21,6 @@ from cocotb.triggers import RisingEdge, FallingEdge, First
 from cocotb.regression import TestFactory
 from cocotb.result import TestFailure
 
-global ref_data
 
 def rnd_val(bit: int = 0, zero: bool = True):
     if zero is True:
@@ -93,7 +92,6 @@ async def mon_score(dut, valid, ready, data, scoreboard):
 
         if (valid.value == 1) and (ready.value == 1): 
             scoreboard.append(data.value)
-            # print(f"Value got: {int(data.value)}")
         
 
 async def perf_op(dut, N, width):
@@ -109,7 +107,8 @@ async def perf_op(dut, N, width):
     
     # Slave side
     dut.out_ready_i.value = 1
-    
+   
+    # No back-pressure
     random_data = [rnd_val(width) for _ in range(N)]
     for val in random_data:
         dut.in_data_i.value = val 
@@ -117,12 +116,13 @@ async def perf_op(dut, N, width):
 
     dut.in_valid_i.value = 0
     dut.in_data_i.value = 0
-    dut.out_ready_i.value = 0
+    dut.out_ready_i.value = 1
     await ClockCycles(dut.clk, 10) 
 
+    # With random back-pressure
     dut.in_valid_i.value = 1
-    random_data_2 = [rnd_val(width) for _ in range(N)]
-    for val in random_data_2:
+    random_data = [rnd_val(width) for _ in range(N)]
+    for val in random_data:
         dut.in_data_i.value = val 
         dut.out_ready_i.value = rnd_val(1, True) 
         await ClockCycles(dut.clk, 1) 
@@ -139,19 +139,44 @@ async def perf_op(dut, N, width):
     dut.in_valid_i.value = 0
     dut.in_data_i.value = 0
     dut.out_ready_i.value = 1
-    await ClockCycles(dut.clk, 10)
-    comb = random_data+random_data_2
-    global ref_data
-    ref_data = copy.deepcopy(comb)
+    await ClockCycles(dut.clk, 10) 
+
+    # With interval between txn
+    random_data = [rnd_val(width) for _ in range(N)]
+    for val in random_data:
+        dut.in_valid_i.value = rnd_val(1, True)
+        dut.in_data_i.value = val 
+        dut.out_ready_i.value = rnd_val(1, True) 
+        await ClockCycles(dut.clk, 1) 
+        
+        while dut.in_valid_i.value == 0:
+            dut.in_valid_i.value = rnd_val(1, True) 
+            await ClockCycles(dut.clk, 1) 
+
+        while dut.in_ready_o.value == 0:
+            dut.out_ready_i.value = rnd_val(1, True) 
+            await ClockCycles(dut.clk, 1) 
+
+    while dut.in_ready_o.value == 0:
+        await ClockCycles(dut.clk, 1) 
+        dut.out_ready_i.value = rnd_val(1, True) 
+
+    dut.in_valid_i.value = 0
+    dut.in_data_i.value = 0
+    dut.out_ready_i.value = 1
+    await ClockCycles(dut.clk, 10) 
 
 @cocotb.test()
 async def run_test(dut):
     scoreboard = []
+    ref_data = []
+
     await setup_dut(dut, cfg.RST_CYCLES)
 
     mon_data = cocotb.start_soon(mon_stable_data(dut, dut.out_valid_o, dut.out_ready_i, dut.out_data_o))
     mon_val = cocotb.start_soon(mon_valid(dut, dut.out_valid_o, dut.out_ready_i))
     mon_scor = cocotb.start_soon(mon_score(dut, dut.out_valid_o, dut.out_ready_i, dut.out_data_o, scoreboard))
+    mon_in = cocotb.start_soon(mon_score(dut, dut.in_valid_i, dut.in_ready_o, dut.in_data_i, ref_data))
     per = cocotb.start_soon(perf_op(dut, 1000, 8))
     
     # Wait until the "per" task finishes
@@ -161,8 +186,8 @@ async def run_test(dut):
     mon_data.kill()
     mon_val.kill() 
     mon_scor.kill() 
+    mon_in.kill()
 
-    global ref_data
     print(f"Len scoreboard [{len(scoreboard)}], Len ref_data [{len(ref_data)}]")
     # Compare what was transferred vs what was received
     if scoreboard == ref_data:
@@ -177,7 +202,7 @@ async def run_test(dut):
 
 def test_basic():
     """
-    Check whether 
+    Check whether valid / ready can be transfered through the skid buffer. 
 
     Test ID: 1
     """
