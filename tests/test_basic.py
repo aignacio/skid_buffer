@@ -21,7 +21,6 @@ from cocotb.triggers import RisingEdge, FallingEdge, First
 from cocotb.regression import TestFactory
 from cocotb.result import TestFailure
 
-global scoreboard
 global ref_data
 
 def rnd_val(bit: int = 0, zero: bool = True):
@@ -86,10 +85,9 @@ async def mon_valid(dut, valid, ready):
         else:
             valid_state = 0
 
-async def mon_score(dut, valid, ready, data):
+async def mon_score(dut, valid, ready, data, scoreboard):
     """Monitor the interface to capture the values that were transfered."""
-    global scoreboard
-    scoreboard = []
+    
     while True:
         await FallingEdge(dut.clk)
 
@@ -148,11 +146,12 @@ async def perf_op(dut, N, width):
 
 @cocotb.test()
 async def run_test(dut):
+    scoreboard = []
     await setup_dut(dut, cfg.RST_CYCLES)
 
     mon_data = cocotb.start_soon(mon_stable_data(dut, dut.out_valid_o, dut.out_ready_i, dut.out_data_o))
     mon_val = cocotb.start_soon(mon_valid(dut, dut.out_valid_o, dut.out_ready_i))
-    mon_scor = cocotb.start_soon(mon_score(dut, dut.out_valid_o, dut.out_ready_i, dut.out_data_o))
+    mon_scor = cocotb.start_soon(mon_score(dut, dut.out_valid_o, dut.out_ready_i, dut.out_data_o, scoreboard))
     per = cocotb.start_soon(perf_op(dut, 1000, 8))
     
     # Wait until the "per" task finishes
@@ -163,7 +162,6 @@ async def run_test(dut):
     mon_val.kill() 
     mon_scor.kill() 
 
-    global scoreboard
     global ref_data
     print(f"Len scoreboard [{len(scoreboard)}], Len ref_data [{len(ref_data)}]")
     # Compare what was transferred vs what was received
@@ -172,9 +170,9 @@ async def run_test(dut):
     else:
         raise TestFailure("[Test result] Values transferred are not matching!")
 
-    # for index, val in enumerate(scoreboard):
-        # print(f"[{index}] {int(val)}")
-
+    for index in range(len(ref_data)):
+        if scoreboard[index] == ref_data[index]:
+            print(f"[{index}] {int(scoreboard[index])} == {int(ref_data[index])}")
 
 
 def test_basic():
