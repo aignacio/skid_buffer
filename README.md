@@ -4,6 +4,8 @@
 
 This project is a simple skid buffer design used to break combinatorial path between two combinatorial logic clouds. Some use case / applications can be listed as (but not limited to):
 
+![skid](skid_buffer.svg)
+
 1. Usually valid / data signals are FFs (seq. elements) but ready tends to be combinatorial depending on the implementation of different designs. When ready is fully combo, adding the design with REG_OUTPUT == 0 would allow the ready path to be separated by a flop helping on timing closure without adding any extra latency to the handshake.
 
 2. If a valid/ready protocol (AXI for instance) interface needs to be routed through different tiles on an SoC, it is common to add pipeline bridges to allow the timing closure breaking the net delay through the different stages. This design allows the construction of an AXI pipeline bridge by chaining multiple skid buffers in a row.
