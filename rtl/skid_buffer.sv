@@ -3,13 +3,13 @@
  * License           : MIT license <Check LICENSE>
  * Author            : Anderson Ignacio da Silva (aignacio) <anderson@aignacio.com>
  * Date              : 02.06.2024
- * Last Modified Date: 03.06.2024
+ * Last Modified Date: 05.06.2024
  * Description       : Skid Buffer to break combo path between pip flops
  */
 module skid_buffer
 #(
   parameter int DATA_WIDTH = 8,
-  parameter bit REG_OUTPUT = 1
+  parameter int REG_OUTPUT = 1
 )(
   input                          clk,
   input                          rst,

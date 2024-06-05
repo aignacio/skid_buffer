@@ -4,9 +4,10 @@
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson Ignacio da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 12.07.2023
-# Last Modified Date: 04.11.2023
+# Last Modified Date: 06.06.2024
 import os
 import glob
+import copy
 
 
 class cfg:
@@ -43,3 +44,31 @@ class cfg:
         ]
     else:
         EXTRA_ARGS = []
+        
+    EXTRA_ARGS_SMALL = copy.deepcopy(EXTRA_ARGS)
+    EXTRA_ARGS_BIG = copy.deepcopy(EXTRA_ARGS)
+   
+    OPTIONS = ["SMALL", "BIG"] 
+    OPTIONS_TEST = {}
+    
+    SMALL = {}
+    SMALL['DATA_WIDTH'] = 1
+    SMALL['REG_OUTPUT'] = 0
+
+    BIG = {}
+    BIG['DATA_WIDTH'] = 32
+    BIG['REG_OUTPUT'] = 1
+ 
+    OPTIONS_TEST['SMALL'] = SMALL 
+    OPTIONS_TEST['BIG'] = BIG 
+   
+    for param in SMALL.items():
+        EXTRA_ARGS_SMALL.append("-G"+param[0].upper()+"="+str(param[1]))
+    for param in BIG.items():
+        EXTRA_ARGS_BIG.append("-G"+param[0].upper()+"="+str(param[1]))
+
+    def _get_cfg_args(config):
+        if config == "SMALL":
+            return cfg.EXTRA_ARGS_SMALL
+        elif config == "BIG":
+            return cfg.EXTRA_ARGS_BIG

@@ -4,7 +4,7 @@
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson Ignacio da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 12.07.2023
-# Last Modified Date: 04.06.2024
+# Last Modified Date: 05.06.2024
 import random
 import cocotb
 import os
@@ -168,6 +168,9 @@ async def perf_op(dut, N, width):
 
 @cocotb.test()
 async def run_test(dut):
+    config = os.getenv("CONFIG")
+    parameters = cfg.OPTIONS_TEST[config]
+
     scoreboard = []
     ref_data = []
 
@@ -177,7 +180,7 @@ async def run_test(dut):
     mon_val = cocotb.start_soon(mon_valid(dut, dut.out_valid_o, dut.out_ready_i))
     mon_scor = cocotb.start_soon(mon_score(dut, dut.out_valid_o, dut.out_ready_i, dut.out_data_o, scoreboard))
     mon_in = cocotb.start_soon(mon_score(dut, dut.in_valid_i, dut.in_ready_o, dut.in_data_i, ref_data))
-    per = cocotb.start_soon(perf_op(dut, 1000, 8))
+    per = cocotb.start_soon(perf_op(dut, 1000, parameters['DATA_WIDTH']))
     
     # Wait until the "per" task finishes
     done = await First(per, mon_data, mon_val, mon_scor)
@@ -200,7 +203,8 @@ async def run_test(dut):
             print(f"[{index}] {int(scoreboard[index])} == {int(ref_data[index])}")
 
 
-def test_basic():
+@pytest.mark.parametrize("config",cfg.OPTIONS)
+def test_basic(config):
     """
     Check whether valid / ready can be transfered through the skid buffer. 
 
@@ -208,10 +212,13 @@ def test_basic():
     """
     module = os.path.splitext(os.path.basename(__file__))[0]
     SIM_BUILD = os.path.join(
-        cfg.TESTS_DIR, f"../../run_dir/sim_build_{cfg.SIMULATOR}_{module}"
+        cfg.TESTS_DIR, f"../../run_dir/sim_build_{cfg.SIMULATOR}_{module}_{config}"
     )
-    extra_args_sim = cfg.EXTRA_ARGS
 
+    extra_args_sim = cfg.EXTRA_ARGS
+    extra_args_sim = cfg._get_cfg_args(config)
+    cfg.EXTRA_ENV['CONFIG'] = config
+    
     run(
         python_search=[cfg.TESTS_DIR],
         includes=cfg.INC_DIR,
@@ -219,7 +226,8 @@ def test_basic():
         toplevel=cfg.TOPLEVEL,
         timescale=cfg.TIMESCALE,
         module=module,
-        sim_build=SIM_BUILD,
         extra_args=extra_args_sim,
-        waves=1,
+        extra_env=cfg.EXTRA_ENV,
+        sim_build=SIM_BUILD,
+        waves=1
     )

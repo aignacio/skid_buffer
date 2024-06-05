@@ -1,0 +1,66 @@
+[*]
+[*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
+[*] Wed Jun  5 22:59:35 2024
+[*]
+[dumpfile] "run_dir/sim_build_verilator_test_basic_BIG/dump.fst"
+[dumpfile_mtime] "Wed Jun  5 22:58:30 2024"
+[dumpfile_size] 20276
+[savefile] "/Users/aignacio/projects/skid_buffer/template_skid_buffer_big.gtkw"
+[timestart] 20100
+[size] 1440 2142
+[pos] 253 676
+*-14.336738 46600 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+[markername] AA
+[markername] BB
+[markername] CC
+[markername] DD
+[markername] EE
+[markername] FF
+[markername] GG
+[markername] HH
+[markername] II
+[markername] JJ
+[markername] KK
+[markername] LL
+[markername] MM
+[markername] NN
+[markername] OO
+[markername] PP
+[markername] QQ
+[markername] RR
+[markername] SS
+[markername] TT
+[markername] UU
+[markername] VV
+[markername] WW
+[markername] XX
+[markername] YY
+[markername] ZZ
+[treeopen] .
+[sst_width] 253
+[signals_width] 212
+[sst_expanded] 1
+[sst_vpaned_height] 743
+@28
+skid_buffer.clk
+skid_buffer.rst
+@201
+-Master I/F
+@22
+skid_buffer.in_data_i[31:0]
+@28
+skid_buffer.in_valid_i
+skid_buffer.in_ready_o
+@200
+-Slave I/F
+@22
+skid_buffer.out_data_o[31:0]
+@28
+skid_buffer.out_valid_o
+skid_buffer.out_ready_i
+@200
+-
+@22
+skid_buffer.buff_ff[31:0]
+[pattern_trace] 1
+[pattern_trace] 0
