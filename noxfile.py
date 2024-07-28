@@ -4,12 +4,12 @@
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 08.10.2023
-# Last Modified Date: 05.06.2024
+# Last Modified Date: 28.07.2024
 
 import nox
 
 
-@nox.session(python=["3.6", "3.7", "3.8", "3.9", "3.10"],reuse_venv=True)
+@nox.session(python=["3.6", "3.7", "3.8", "3.9", "3.10", "3.12"],reuse_venv=True)
 def run(session):
     session.env["DUT"] = "skid_buffer"
     session.env['SIM'] = "verilator"

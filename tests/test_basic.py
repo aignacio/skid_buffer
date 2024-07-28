@@ -4,7 +4,7 @@
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson Ignacio da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 12.07.2023
-# Last Modified Date: 05.06.2024
+# Last Modified Date: 28.07.2024
 import random
 import cocotb
 import os
@@ -229,5 +229,6 @@ def test_basic(config):
         extra_args=extra_args_sim,
         extra_env=cfg.EXTRA_ENV,
         sim_build=SIM_BUILD,
+        plus_args=["--trace"],  # https://github.com/cocotb/cocotb/issues/3894 
         waves=1
     )
