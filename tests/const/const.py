@@ -4,7 +4,7 @@
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson Ignacio da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 12.07.2023
-# Last Modified Date: 06.06.2024
+# Last Modified Date: 06.08.2024
 import os
 import glob
 import copy
@@ -22,10 +22,12 @@ class cfg:
     TESTS_DIR = os.path.dirname(os.path.abspath(__file__))
     INC_DIR = [os.path.join(TESTS_DIR, "../../rtl/include")]
     RTL_DIR = os.path.join(TESTS_DIR, "../../rtl")
+    TB_DIR = os.path.join(TESTS_DIR, "../../tests")
 
     VERILOG_SOURCES = []  # The sequence below is important...
     VERILOG_SOURCES = VERILOG_SOURCES + glob.glob(f"{RTL_DIR}/*.sv", recursive=True)
     VERILOG_SOURCES = VERILOG_SOURCES + glob.glob(f"{RTL_DIR}/*.v", recursive=True)
+    VERILOG_SOURCES = VERILOG_SOURCES + glob.glob(f"{TB_DIR}/*.sv", recursive=True)
 
     EXTRA_ENV = {}
     EXTRA_ENV["COCOTB_HDL_TIMEPRECISION"] = os.getenv("TIMEPREC")
@@ -44,24 +46,24 @@ class cfg:
         ]
     else:
         EXTRA_ARGS = []
-        
+
     EXTRA_ARGS_SMALL = copy.deepcopy(EXTRA_ARGS)
     EXTRA_ARGS_BIG = copy.deepcopy(EXTRA_ARGS)
-   
-    OPTIONS = ["SMALL", "BIG"] 
+
+    OPTIONS = ["SMALL", "BIG"]
     OPTIONS_TEST = {}
-    
+
     SMALL = {}
-    SMALL['DATA_WIDTH'] = 1
+    SMALL['DATA_WIDTH'] = 32
     SMALL['REG_OUTPUT'] = 0
 
     BIG = {}
-    BIG['DATA_WIDTH'] = 32
+    BIG['DATA_WIDTH'] = 64
     BIG['REG_OUTPUT'] = 1
- 
-    OPTIONS_TEST['SMALL'] = SMALL 
-    OPTIONS_TEST['BIG'] = BIG 
-   
+
+    OPTIONS_TEST['SMALL'] = SMALL
+    OPTIONS_TEST['BIG'] = BIG
+
     for param in SMALL.items():
         EXTRA_ARGS_SMALL.append("-G"+param[0].upper()+"="+str(param[1]))
     for param in BIG.items():
