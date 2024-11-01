@@ -27,6 +27,13 @@ Also two type of design parameters are tested:
 
 *Note:* The REG_OUTPUT == 1 adds 1 clk cycle latency on all txns as obviously everything is registered.
 
+## Waveforms
+
+Some waveforms of the skid buffer, just for reference.
+
+![sk0](skid_buffer_0.svg)
+![sk1](skid_buffer_1.svg)
+
 ## References:
 
 * [ZIP CPU blog post](https://zipcpu.com/blog/2019/05/22/skidbuffer.html)

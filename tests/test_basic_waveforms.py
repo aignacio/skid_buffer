@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# File              : test_basic.py
+# File              : test_basic_waveforms.py
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson Ignacio da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 12.07.2023
@@ -20,6 +20,7 @@ from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge, FallingEdge, First
 from cocotb.regression import TestFactory
 from cocotb.result import TestFailure
+from cocotbext.waves import waveform
 
 
 def rnd_val(bit: int = 0, zero: bool = True):
@@ -103,6 +104,36 @@ async def perf_op(dut, N, width):
     # Slave side
     dut.out_ready_i.value = 0
 
+    diagram = []
+    for i in range(3):
+        diagram.append(
+            waveform(
+                clk=dut.clk,
+                name="skid_buffer_" + str(i),
+                hscale=4,
+                debug=True,
+                start=False,
+            )
+        )
+        diagram[i].add_signal(
+            [
+                dut.in_valid_i,
+                dut.in_ready_o,
+                dut.in_data_i,
+            ],
+            group="Input",
+        )
+        diagram[i].add_signal(
+            [
+                dut.out_valid_o,
+                dut.out_ready_i,
+                dut.out_data_o,
+            ],
+            group="Output",
+        )
+
+
+    diagram[0].start()
     await ClockCycles(dut.clk, 2)
     # Master side
     dut.in_valid_i.value = 1
@@ -119,8 +150,12 @@ async def perf_op(dut, N, width):
     dut.in_valid_i.value = 0
     dut.in_data_i.value = 0
     dut.out_ready_i.value = 1
-    await ClockCycles(dut.clk, 10)
 
+    diagram[1].start()
+
+    diagram[0].save_svg()
+
+    await ClockCycles(dut.clk, 2)
     # With random back-pressure
     dut.in_valid_i.value = 1
     random_data = [rnd_val(width) for _ in range(N)]
@@ -141,8 +176,12 @@ async def perf_op(dut, N, width):
     dut.in_valid_i.value = 0
     dut.in_data_i.value = 0
     dut.out_ready_i.value = 1
-    await ClockCycles(dut.clk, 10)
+ 
+    diagram[1].save_svg()
 
+    diagram[2].start()
+
+    await ClockCycles(dut.clk, 1)
     # With interval between txn
     random_data = [rnd_val(width) for _ in range(N)]
     for val in random_data:
@@ -166,7 +205,9 @@ async def perf_op(dut, N, width):
     dut.in_valid_i.value = 0
     dut.in_data_i.value = 0
     dut.out_ready_i.value = 1
-    await ClockCycles(dut.clk, 10)
+    await ClockCycles(dut.clk, 2)
+
+    diagram[2].save_svg()
 
 
 @cocotb.test()
@@ -189,7 +230,7 @@ async def run_test(dut):
     mon_in = cocotb.start_soon(
         mon_score(dut, dut.in_valid_i, dut.in_ready_o, dut.in_data_i, ref_data)
     )
-    per = cocotb.start_soon(perf_op(dut, 1000, parameters["DATA_WIDTH"]))
+    per = cocotb.start_soon(perf_op(dut, 3, parameters["DATA_WIDTH"]))
 
     # Wait until the "per" task finishes
     done = await First(per, mon_data, mon_val, mon_scor)
@@ -213,7 +254,7 @@ async def run_test(dut):
 
 
 @pytest.mark.parametrize("config", cfg.OPTIONS)
-def test_basic(config):
+def test_basic_waveforms(config):
     """
     Check whether valid / ready can be transfered through the skid buffer.
 

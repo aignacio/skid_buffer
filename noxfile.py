@@ -4,7 +4,7 @@
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 08.10.2023
-# Last Modified Date: 06.08.2024
+# Last Modified Date: 01.11.2024
 
 import nox
 
@@ -23,6 +23,7 @@ def run(session):
         "pytest-split",
         "cocotb >= 1.8.0",
         "cocotb-test",
+        "cocotbext-waves >= 0.1.9",
     )
     session.run(
         "pytest",
