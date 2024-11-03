@@ -39,7 +39,7 @@ jobs:
           sudo apt-get install lcov -fy
           git clone https://github.com/verilator/verilator.git
           cd verilator
-          git checkout stable
+          git checkout v5.026
           autoconf
           ./configure
           make -j $(nproc)
